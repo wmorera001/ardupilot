@@ -18,10 +18,9 @@
 
 extern const AP_HAL::HAL& hal;
 
-AP_InertialSensor_Backend(AP_InertialSensor & _imu, AP_InertialSensor::AP_InertialSensor_State& _state, AP_HAL::SPIDeviceDriver *_port) :
+AP_InertialSensor_Backend(AP_InertialSensor & _imu, AP_HAL::SPIDeviceDriver *_port) :
     port(_port),
-    imu(_imu),
-    state(_state)
+    imu(_imu)
 {
 
 }
@@ -78,7 +77,7 @@ AP_InertialSensor::_init_gyro()
 
     for(int8_t c = 0; c < 5; c++) {
         hal.scheduler->delay(5);
-        update();
+        _update();
     }
 
     // the strategy is to average 50 points over 0.5 seconds, then do it
@@ -102,7 +101,7 @@ AP_InertialSensor::_init_gyro()
             gyro_sum[k].zero();
         }
         for (i=0; i<50; i++) {
-            update();
+            _update();
             for (uint8_t k=0; k<num_gyros; k++) {
                 gyro_sum[k] += get_gyro(k);
             }
@@ -197,7 +196,7 @@ AP_InertialSensor::_init_accel()
     // loop until we calculate acceptable offsets
     while (true) {
         // get latest accelerometer values
-        update();
+        _update();
 
         for (uint8_t k=0; k<num_accels; k++) {
             // store old offsets
@@ -211,7 +210,7 @@ AP_InertialSensor::_init_accel()
         for(int8_t i = 0; i < 50; i++) {
 
             hal.scheduler->delay(20);
-            update();
+            _update();
 
             // low pass filter the offsets
             for (uint8_t k=0; k<num_accels; k++) {
