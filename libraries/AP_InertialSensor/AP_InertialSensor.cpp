@@ -112,6 +112,17 @@ AP_InertialSensor::AP_InertialSensor() :
     AP_Param::setup_object_defaults(this, var_info);        
 }
 
+/// update - returns true if all the IMU's values have been updated successfully
+bool AP_InertialSensor::update()
+{
+    bool success = true;
+    for (uint8_t i=0; i<INS_MAX_INSTANCES; i++) {
+        success &= drivers[i]->_update();
+    }
+    return success;
+}
+
+
 // TODO needs to be modified
 // save parameters to eeprom
 void AP_InertialSensor::_save_parameters()

@@ -56,6 +56,11 @@ public:
                                  float& trim_pitch);
 #endif
 
+    /* Update the sensor data of all the instances, so that getters are nonblocking.
+     * Returns a bool of whether data was updated or not.
+     */
+    bool update();
+
     /// calibrated - returns true if the accelerometers have been calibrated
     ///
     /// @note this should not be called while flying because it reads from the eeprom which can be slow
@@ -66,19 +71,19 @@ public:
     ///
     /// @returns	vector of rotational rates in radians/sec
     ///
-    const Vector3f     &get_gyro(uint8_t i) const { return _gyro[i]; }
+    const Vector3f     &get_gyro(uint8_t i) const { return drivers[primary_instance]->_gyro[i]; }
     const Vector3f     &get_gyro(void) const { return get_gyro(_get_primary_gyro()); }
     void       set_gyro(uint8_t instance, const Vector3f &gyro) {}
 
     // set gyro offsets in radians/sec
-    const Vector3f &get_gyro_offsets(uint8_t i) const { return _gyro_offset[i]; }
+    const Vector3f &get_gyro_offsets(uint8_t i) const { return drivers[primary_instance]->_gyro_offset[i]; }
     const Vector3f &get_gyro_offsets(void) const { return get_gyro_offsets(_get_primary_gyro()); }
 
     /// Fetch the current accelerometer values
     ///
     /// @returns	vector of current accelerations in m/s/s
     ///
-    const Vector3f     &get_accel(uint8_t i) const { return _accel[i]; }
+    const Vector3f     &get_accel(uint8_t i) const { return drivers[primary_instance]->_accel[i]; }
     const Vector3f     &get_accel(void) const { return get_accel(get_primary_accel()); }
     void       set_accel(uint8_t instance, const Vector3f &accel) {}
 
@@ -92,11 +97,11 @@ public:
     uint8_t get_accel_count(void) const { return 1; };
 
     // get accel offsets in m/s/s
-    const Vector3f &get_accel_offsets(uint8_t i) const { return _accel_offset[i]; }
+    const Vector3f &get_accel_offsets(uint8_t i) const { return drivers[primary_instance]->_accel_offset[i]; }
     const Vector3f &get_accel_offsets(void) const { return get_accel_offsets(get_primary_accel()); }
 
     // get accel scale
-    const Vector3f &get_accel_scale(uint8_t i) const { return _accel_scale[i]; }
+    const Vector3f &get_accel_scale(uint8_t i) const { return drivers[primary_instance]->_accel_scale[i]; }
     const Vector3f &get_accel_scale(void) const { return get_accel_scale(get_primary_accel()); }
 
     // class level parameters
@@ -120,27 +125,17 @@ public:
     uint16_t error_count(void) const { return 0; }
     bool healthy(void) const { return get_gyro_health() && get_accel_health(); }
 
-    uint8_t get_primary_accel(void) const { return 0; }
-    uint8_t _get_primary_gyro(void) const { return 0; }
-
-    // sensor specific init to be overwritten by descendant classes
-    virtual uint16_t        _init_sensor( Sample_rate sample_rate ) = 0;
-
-#if !defined( __AVR_ATmega1280__ )
-    // Calibration routines borrowed from Rolfe Schmidt
-    // blog post describing the method: http://chionophilous.wordpress.com/2011/10/24/accelerometer-calibration-iv-1-implementing-gauss-newton-on-an-atmega/
-    // original sketch available at http://rolfeschmidt.com/mathtools/skimetrics/adxl_gn_calibration.pde
-
-    // _calibrate_accel - perform low level accel calibration
-    virtual bool            _calibrate_accel(Vector3f accel_sample[6], Vector3f& accel_offsets, Vector3f& accel_scale);
-    virtual void            _calibrate_update_matrices(float dS[6], float JS[6][6], float beta[6], float data[3]);
-    virtual void            _calibrate_reset_matrices(float dS[6], float JS[6][6]);
-    virtual void            _calibrate_find_delta(float dS[6], float JS[6][6], float delta[6]);
-    virtual void            _calculate_trim(Vector3f accel_sample, float& trim_roll, float& trim_pitch);
-#endif
+    uint8_t get_primary_accel(void) const { return primary_instance; }
+    uint8_t _get_primary_gyro(void) const { return primary_instance; }
 
     // save parameters to eeprom
     void  _save_parameters();
+
+private:
+    AP_InertialSensor_Backend *drivers[INS_MAX_INSTANCES];
+
+    /// primary IMU instance
+    uint8_t primary_instance=0;
 
 };
 
