@@ -217,6 +217,11 @@ int LinuxUARTDriver::_parseDevicePath(char* arg)
     }    
 }
 
+void *_tcp_start_connection_nonblocking(int read_fd, int write_fd, int one)
+{
+
+}
+
 /*
   start a TCP connection for the serial port. If wait_for_connection
   is true then block until a client connects
@@ -305,8 +310,23 @@ void LinuxUARTDriver::_tcp_start_connection(bool wait_for_connection)
         _connected = true;
         _rd_fd = net_fd;
         _wr_fd = net_fd;
+    } else {
+        // Use non blocking method (select() or poll()) to be notified
+        // and accept the connection
+        printf("Waiting for connection ....\n");
+        fflush(stdout);
+        pthread_t _background_accept_thread;
+        
+        // NEEDS more work
+        
+        //pthread_create(&_background_accept_thread, &thread_attr, &_tcp_start_connection_nonblocking, this);
+        //// _tcp_start_connection_nonblocking(_rd_fd, _wr_fd, one)
+
+        _connected=true;
     }
 }
+
+
 
 /*
   shutdown a UART
