@@ -269,9 +269,14 @@ Compass::Compass(void) :
     last_update(0),
     _null_init_done(false),
     _thr_or_curr(0.0f),
+    _backend_count(0),
+    _compass_count(0),
     _board_orientation(ROTATION_NONE)
 {
     AP_Param::setup_object_defaults(this, var_info);
+    for (uint8_t i=0; i<INS_MAX_BACKENDS; i++) {
+        _backends[i] = NULL;
+    }    
 
 #if COMPASS_MAX_INSTANCES > 1
     // default device ids to zero.  init() method will overwrite with the actual device ids
@@ -281,12 +286,94 @@ Compass::Compass(void) :
 #endif
 }
 
-// Default init method, just returns success.
+// Default init method
 //
 bool
 Compass::init()
 {
+    if (_compass_count == 0) {
+        // detect available backends. Only called once
+        _detect_backends();
+    }
+
+    _product_id = 0; // FIX
+
+    //TODO other initializations needed
+
     return true;
+}
+
+//  Register a new compass instance
+//
+uint8_t Compass::register_compass(void)
+{
+    if (_compass_count == COMPASS_MAX_INSTANCES) {
+        hal.scheduler->panic(PSTR("Too many compass instances"));
+    }
+    return _compass_count++;
+}
+
+/*
+  try to load a backend
+ */
+void 
+Compass::_add_backend(AP_Compass_Backend *(detect)(Compass &))
+{
+    if (_backend_count == COMPASS_MAX_BACKEND) {
+        hal.scheduler->panic(PSTR("Too many compass backends"));
+    }
+    _backends[_backend_count] = detect(*this);
+    if (_backends[_backend_count] != NULL) {
+        _backend_count++;
+    }
+}
+
+/*
+  detect available backends for this board
+ */
+void 
+Compass::_detect_backends(void)
+{
+
+// Values defined in AP_HAL/AP_HAL_Boards.h
+#if HAL_COMPASS_DEFAULT == HAL_COMPASS_HIL
+    _add_backend(AP_Compass_HIL::detect);
+#elif HAL_COMPASS_DEFAULT == HAL_COMPASS_HMC5843
+    _add_backend(AP_Compass_HMC5843::detect);
+#elif HAL_COMPASS_DEFAULT == HAL_COMPASS_PX4
+    _add_backend(AP_Compass_PX4::detect);
+#elif HAL_COMPASS_DEFAULT == HAL_COMPASS_VRBRAIN
+    _add_backend(AP_Compass_VRBRAIN::detect);
+#else
+    #error Unrecognised HAL_COMPASS_TYPE setting
+#endif
+
+    if (_backend_count == 0 ||
+        _compass_count == 0) {
+        hal.scheduler->panic(PSTR("No Compass backends available"));
+    }
+
+    // set the product ID to the ID of the first backend
+    _product_id.set(_backends[0]->product_id());
+}
+
+void 
+Compass::accumulate(void)
+{    
+    for (uint8_t i=0; i< _backend_count; i++) {
+        // call accumulate on each of the backend
+        _backends[i]->accumulate();
+    }
+}
+
+bool 
+Compass::read(void)
+{
+   for (uint8_t i=0; i< _backend_count; i++) {
+        // call read on each of the backend. This call updates field[i]
+        _backends[i]->read();
+    }    
+    return _healthy[get_primary()];
 }
 
 void
