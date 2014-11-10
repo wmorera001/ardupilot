@@ -304,7 +304,6 @@ bool AP_InertialSensor_MPU6000::update( void )
     accel *= MPU6000_ACCEL_SCALE_1G / num_samples;
     _rotate_and_offset_accel(_accel_instance, accel);
 
-<<<<<<< HEAD
     if (_last_filter_hz != _imu.get_filter()) {
 
 #if 0
