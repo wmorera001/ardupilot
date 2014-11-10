@@ -62,8 +62,8 @@ extern const AP_HAL::HAL& hal;
 class Compass
 {
 public:
-    int16_t product_id;                         /// product id
     uint32_t last_update;               ///< micros() time of last update
+    int16_t product_id;                         /// product id
 
     /// Constructor
     ///
@@ -188,6 +188,10 @@ public:
     void set_board_orientation(enum Rotation orientation) {
         _board_orientation = orientation;
     }
+    enum Rotation get_board_orientation() { return _board_orientation;}    
+
+    AP_Int8 get_orientation() { return _orientation[0];}
+    AP_Int8 get_orientation(uint8_t instance) { return _orientation[instance];}
 
     /// Set the motor compensation type
     ///
@@ -260,6 +264,7 @@ public:
     /// @returns                    the instance number of the primary compass
     ///
     uint8_t get_primary(void) const { return 0; }
+    void apply_corrections(Vector3f &mag, uint8_t i);
 
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -270,14 +275,12 @@ public:
     ///
     ///  @return the product ID
     ///    
-    // int16_t product_id(void) const { return _product_id; }
+    // int16_t product_id(void) const { return product_id; }
     AP_Int8     _external[COMPASS_MAX_INSTANCES];   ///<compass is external
-
-
-protected:
     bool        _healthy[COMPASS_MAX_INSTANCES];
     Vector3f    _field[COMPASS_MAX_INSTANCES];     ///< magnetic field strength
 
+protected:
     // backend objects
     AP_Compass_Backend *_backends[COMPASS_MAX_INSTANCES];
     // number of compasses
@@ -310,11 +313,9 @@ protected:
     // board orientation from AHRS
     enum Rotation _board_orientation;
     
-    void apply_corrections(Vector3f &mag, uint8_t i);
 };
 
 #include "AP_Compass_Backend.h"
 #include "AP_Compass_HMC5843.h"
 #include "AP_Compass_HIL.h"
-
 #endif

@@ -21,6 +21,9 @@
 #ifndef __AP_COMPASS_BACKEND_H__
 #define __AP_COMPASS_BACKEND_H__
 
+#include "Compass.h"
+
+class Compass;  // forward declaration
 class AP_Compass_Backend
 {
 public:
@@ -39,7 +42,7 @@ public:
     // accumulate a reading from the magnetometer
     virtual void accumulate(void);
 
-    void _update_compass(uint8_t instance, const Vector3f field, bool healthy);
+    int16_t product_id;                         /// product id
 
 protected:
     virtual bool        read_raw(void);

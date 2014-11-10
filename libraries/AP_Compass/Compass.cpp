@@ -274,7 +274,7 @@ Compass::Compass(void) :
     _board_orientation(ROTATION_NONE)
 {
     AP_Param::setup_object_defaults(this, var_info);
-    for (uint8_t i=0; i<INS_MAX_BACKENDS; i++) {
+    for (uint8_t i=0; i<COMPASS_MAX_BACKEND; i++) {
         _backends[i] = NULL;
     }    
 
@@ -354,7 +354,7 @@ Compass::_detect_backends(void)
     }
 
     // set the product ID to the ID of the first backend
-    product_id.set(_backends[0]->product_id());
+    product_id = _backends[0]->product_id;
 }
 
 void 

@@ -40,7 +40,7 @@ public:
     void        accumulate(void);
 
     // detect the sensor
-    static AP_Compass_Backend *detect(AP_Compass &compass);
+    static AP_Compass_Backend *detect(Compass &compass);
 
 };
 #endif

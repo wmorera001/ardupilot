@@ -64,9 +64,9 @@ AP_Compass_HMC5843::AP_Compass_HMC5843(Compass &compass):
 {}
 
 // detect the sensor
-static AP_Compass_Backend *AP_Compass_HMC5843::detect(Compass &_compass)
+AP_Compass_Backend *AP_Compass_HMC5843::detect(Compass &compass)
 {
-    AP_Compass_HMC5843 *sensor = new AP_Compass_HMC5843(_compass);
+    AP_Compass_HMC5843 *sensor = new AP_Compass_HMC5843(compass);
     if (sensor == NULL) {
         return NULL;
     }
@@ -81,7 +81,7 @@ static AP_Compass_Backend *AP_Compass_HMC5843::detect(Compass &_compass)
 bool AP_Compass_HMC5843::read_register(uint8_t address, uint8_t *value)
 {
     if (hal.i2c->readRegister((uint8_t)COMPASS_ADDRESS, address, value) != 0) {
-        _healthy[0] = false;
+        _compass._healthy[_compass_instance] = false;
         return false;
     }
     return true;
@@ -91,7 +91,7 @@ bool AP_Compass_HMC5843::read_register(uint8_t address, uint8_t *value)
 bool AP_Compass_HMC5843::write_register(uint8_t address, uint8_t value)
 {
     if (hal.i2c->writeRegister((uint8_t)COMPASS_ADDRESS, address, value) != 0) {
-        _healthy[0] = false;
+        _compass._healthy[_compass_instance] = false;
         return false;
     }
     return true;
@@ -103,10 +103,10 @@ bool AP_Compass_HMC5843::read_raw()
     uint8_t buff[6];
 
     if (hal.i2c->readRegisters(COMPASS_ADDRESS, 0x03, 6, buff) != 0) {
-        if (_healthy[0]) {
+        if (_compass._healthy[_compass_instance]) {
 			hal.i2c->setHighSpeed(false);
         }
-        _healthy[0] = false;
+        _compass._healthy[_compass_instance] = false;
         _i2c_sem->give();
         return false;
     }
@@ -143,7 +143,7 @@ void AP_Compass_HMC5843::accumulate(void)
         return;
     }
    uint32_t tnow = hal.scheduler->micros();
-   if (_healthy[0] && _accum_count != 0 && (tnow - _last_accum_time) < 13333) {
+   if (_compass._healthy[_compass_instance] && _accum_count != 0 && (tnow - _last_accum_time) < 13333) {
 	  // the compass gets new data at 75Hz
 	  return;
    }
@@ -211,7 +211,7 @@ AP_Compass_HMC5843::init()
     _base_config = 0;
     if (!write_register(ConfigRegA, SampleAveraging_8<<5 | DataOutputRate_75HZ<<2 | NormalOperation) ||
         !read_register(ConfigRegA, &_base_config)) {
-        _healthy[0] = false;
+        _compass._healthy[_compass_instance] = false;
         _i2c_sem->give();
         return false;
     }
@@ -325,7 +325,7 @@ AP_Compass_HMC5843::init()
     _initialised = true;
 
 	// perform an initial read
-	_healthy[0] = true;
+	_compass._healthy[_compass_instance] = true;
 	read();
 
 #if 0
@@ -375,7 +375,7 @@ bool AP_Compass_HMC5843::read()
 	_accum_count = 0;
 	_mag_x_accum = _mag_y_accum = _mag_z_accum = 0;
 
-    last_update = hal.scheduler->micros(); // record time of update
+    _compass.last_update = hal.scheduler->micros(); // record time of update
 
     // rotate to the desired orientation
     if (product_id == AP_COMPASS_TYPE_HMC5883L) {
@@ -387,17 +387,19 @@ bool AP_Compass_HMC5843::read()
     _field.rotate(MAG_BOARD_ORIENTATION);
 
     // add user selectable orientation
-    _field.rotate((enum Rotation)_orientation[0].get());
+    _field.rotate((enum Rotation)_compass.get_orientation(_compass_instance).get());
 
     if (!_compass._external[_compass_instance]) {
         // and add in AHRS_ORIENTATION setting if not an external compass
-        _field.rotate(_board_orientation);
+        _field.rotate(_compass.get_board_orientation());
     }
 
-    _compass_.apply_corrections(_field, _compass_instance);
+    _compass.apply_corrections(_field, _compass_instance);
     _healthy = true;
 
-    _update_compass(_compass_instance, _field, _healthy)
+    _compass._field[_compass_instance] = _field;
+    _compass._healthy[_compass_instance] = _healthy;
+
 
     return true;
 }
