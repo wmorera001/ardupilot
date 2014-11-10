@@ -33,6 +33,32 @@ AP_Compass_HIL::AP_Compass_HIL() : Compass()
     _setup_earth_field();
 }
 
+// constructor
+AP_Compass_HIL::AP_Compass_HIL(Compass &compass):
+    AP_Compass_Backend(compass)    
+{}
+
+// detect the sensor
+static AP_Compass_Backend *AP_Compass_HIL::detect(Compass &_compass)
+{
+    AP_Compass_HIL *sensor = new AP_Compass_HIL(_compass);
+    if (sensor == NULL) {
+        return NULL;
+    }
+    if (!sensor->init()) {
+        delete sensor;
+        return NULL;
+    }
+    return sensor;
+}
+
+bool
+AP_Compass_HIL::init(void)
+{
+    // register the compass instance in the frontend
+    _compass_instance = _compass.register_compass();
+    return true;
+}
 // setup _Bearth
 void AP_Compass_HIL::_setup_earth_field(void)
 {
@@ -50,12 +76,14 @@ void AP_Compass_HIL::_setup_earth_field(void)
 
 bool AP_Compass_HIL::read()
 {
-    _field[0] = _hil_mag;
+    _field = _hil_mag;
     
-    apply_corrections(_field[0],0);
+    apply_corrections(_field,_compass_instance);
 
     // values set by setHIL function
     last_update = hal.scheduler->micros();      // record time of update
+    
+    //_update_compass(_compass_instance, _field, _healthy)
     return true;
 }
 
