@@ -27,12 +27,35 @@
 extern const AP_HAL::HAL& hal;
 
 // constructor
-AP_Compass_HIL::AP_Compass_HIL() : Compass() 
+AP_Compass_HIL::AP_Compass_HIL(Compass &compass):
+    AP_Compass_Backend(compass)    
 {
     product_id = AP_COMPASS_TYPE_HIL;
     _setup_earth_field();
+
 }
 
+// detect the sensor
+AP_Compass_Backend *AP_Compass_HIL::detect(Compass &compass)
+{
+    AP_Compass_HIL *sensor = new AP_Compass_HIL(compass);
+    if (sensor == NULL) {
+        return NULL;
+    }
+    if (!sensor->init()) {
+        delete sensor;
+        return NULL;
+    }
+    return sensor;
+}
+
+bool
+AP_Compass_HIL::init(void)
+{
+    // register the compass instance in the frontend
+    _compass_instance = _compass.register_compass();
+    return true;
+}
 // setup _Bearth
 void AP_Compass_HIL::_setup_earth_field(void)
 {
@@ -42,7 +65,7 @@ void AP_Compass_HIL::_setup_earth_field(void)
     // rotate _Bearth for inclination and declination. -66 degrees
     // is the inclination in Canberra, Australia
     Matrix3f R;
-    R.from_euler(0, ToRad(66), _declination.get());
+    R.from_euler(0, ToRad(66), _compass.get_declination());
     _Bearth = R * _Bearth;
 }
 
@@ -50,12 +73,14 @@ void AP_Compass_HIL::_setup_earth_field(void)
 
 bool AP_Compass_HIL::read()
 {
-    _field[0] = _hil_mag;
+    _field = _hil_mag;
     
-    apply_corrections(_field[0],0);
+    _compass.apply_corrections(_field,_compass_instance);
 
     // values set by setHIL function
-    last_update = hal.scheduler->micros();      // record time of update
+    _compass.last_update = hal.scheduler->micros();      // record time of update
+    
+    //_update_compass(_compass_instance, _field, _healthy)
     return true;
 }
 
@@ -72,9 +97,9 @@ void AP_Compass_HIL::setHIL(float roll, float pitch, float yaw)
     // create a rotation matrix for the given attitude
     R.from_euler(roll, pitch, yaw);
 
-    if (_last_declination != _declination.get()) {
+    if (_last_declination != _compass.get_declination()) {
         _setup_earth_field();
-        _last_declination = _declination.get();
+        _last_declination = _compass.get_declination();
     }
 
     // convert the earth frame magnetic vector to body frame, and
@@ -87,14 +112,14 @@ void AP_Compass_HIL::setHIL(float roll, float pitch, float yaw)
     _hil_mag.rotate(MAG_BOARD_ORIENTATION);
 
     // add user selectable orientation
-    _hil_mag.rotate((enum Rotation)_orientation[0].get());
+    _hil_mag.rotate((enum Rotation)_compass.get_orientation().get());
 
-    if (!_external[0]) {
+    if (!_compass._external[0]) {
         // and add in AHRS_ORIENTATION setting if not an external compass
-        _hil_mag.rotate(_board_orientation);
+        _hil_mag.rotate(_compass.get_board_orientation());
     }
 
-    _healthy[0] = true;
+    _compass._healthy[0] = true;
 }
 
 // Update raw magnetometer values from HIL mag vector
@@ -104,7 +129,7 @@ void AP_Compass_HIL::setHIL(const Vector3f &mag)
     _hil_mag.x = mag.x;
     _hil_mag.y = mag.y;
     _hil_mag.z = mag.z;
-    _healthy[0] = true;
+    _compass._healthy[0] = true;
 }
 
 const Vector3f& AP_Compass_HIL::getHIL() const {
