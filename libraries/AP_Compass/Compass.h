@@ -8,6 +8,7 @@
 #include <AP_Math.h>
 #include <AP_Declination.h> // ArduPilot Mega Declination Helper Library
 #include <AP_HAL.h>
+#include "AP_Compass_Backend.h"
 
 extern const AP_HAL::HAL& hal;
 
@@ -269,7 +270,7 @@ public:
     ///
     ///  @return the product ID
     ///    
-    int16_t product_id(void) const { return _product_id; }
+    // int16_t product_id(void) const { return _product_id; }
     AP_Int8     _external[COMPASS_MAX_INSTANCES];   ///<compass is external
 
 

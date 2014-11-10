@@ -296,7 +296,7 @@ Compass::init()
         _detect_backends();
     }
 
-    _product_id = 0; // FIX
+    product_id = 0; // FIX
 
     //TODO other initializations needed
 
@@ -354,7 +354,7 @@ Compass::_detect_backends(void)
     }
 
     // set the product ID to the ID of the first backend
-    _product_id.set(_backends[0]->product_id());
+    product_id.set(_backends[0]->product_id());
 }
 
 void 
