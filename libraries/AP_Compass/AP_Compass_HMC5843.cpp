@@ -57,6 +57,26 @@ extern const AP_HAL::HAL& hal;
 #define DataOutputRate_30HZ   0x05
 #define DataOutputRate_75HZ   0x06
 
+// constructor
+AP_Compass_HMC5843::AP_Compass_HMC5843(Compass &compass):
+    AP_Compass_Backend(compass),
+    _accum_count(0)
+{}
+
+// detect the sensor
+static AP_Compass_Backend *AP_Compass_HMC5843::detect(Compass &_compass)
+{
+    AP_Compass_HMC5843 *sensor = new AP_Compass_HMC5843(_compass);
+    if (sensor == NULL) {
+        return NULL;
+    }
+    if (!sensor->init()) {
+        delete sensor;
+        return NULL;
+    }
+    return sensor;
+}
+
 // read_register - read a register value
 bool AP_Compass_HMC5843::read_register(uint8_t address, uint8_t *value)
 {
@@ -313,6 +333,9 @@ AP_Compass_HMC5843::init()
                           calibration[0], calibration[1], calibration[2]);
 #endif
 
+    // register the compass instance in the frontend
+    _compass_instance = _compass.register_compass();
+
     return success;
 }
 
@@ -325,7 +348,7 @@ bool AP_Compass_HMC5843::read()
         // have the right orientation!)
         return false;
     }
-    if (!_healthy[0]) {
+    if (!_healthy) {
         if (hal.scheduler->millis() < _retry_time) {
             return false;
         }
@@ -338,7 +361,7 @@ bool AP_Compass_HMC5843::read()
 
 	if (_accum_count == 0) {
 	   accumulate();
-	   if (!_healthy[0] || _accum_count == 0) {
+	   if (!_healthy || _accum_count == 0) {
 		  // try again in 1 second, and set I2c clock speed slower
 		  _retry_time = hal.scheduler->millis() + 1000;
 		  hal.i2c->setHighSpeed(false);
@@ -346,9 +369,9 @@ bool AP_Compass_HMC5843::read()
 	   }
 	}
 
-	_field[0].x = _mag_x_accum * calibration[0] / _accum_count;
-	_field[0].y = _mag_y_accum * calibration[1] / _accum_count;
-	_field[0].z = _mag_z_accum * calibration[2] / _accum_count;
+	_field.x = _mag_x_accum * calibration[0] / _accum_count;
+	_field.y = _mag_y_accum * calibration[1] / _accum_count;
+	_field.z = _mag_z_accum * calibration[2] / _accum_count;
 	_accum_count = 0;
 	_mag_x_accum = _mag_y_accum = _mag_z_accum = 0;
 
@@ -356,24 +379,25 @@ bool AP_Compass_HMC5843::read()
 
     // rotate to the desired orientation
     if (product_id == AP_COMPASS_TYPE_HMC5883L) {
-        _field[0].rotate(ROTATION_YAW_90);
+        _field.rotate(ROTATION_YAW_90);
     }
 
     // apply default board orientation for this compass type. This is
     // a noop on most boards
-    _field[0].rotate(MAG_BOARD_ORIENTATION);
+    _field.rotate(MAG_BOARD_ORIENTATION);
 
     // add user selectable orientation
-    _field[0].rotate((enum Rotation)_orientation[0].get());
+    _field.rotate((enum Rotation)_orientation[0].get());
 
-    if (!_external[0]) {
+    if (!_compass._external[_compass_instance]) {
         // and add in AHRS_ORIENTATION setting if not an external compass
-        _field[0].rotate(_board_orientation);
+        _field.rotate(_board_orientation);
     }
 
-    apply_corrections(_field[0],0);
+    _compass_.apply_corrections(_field, _compass_instance);
+    _healthy = true;
 
-    _healthy[0] = true;
+    _update_compass(_compass_instance, _field, _healthy)
 
     return true;
 }
