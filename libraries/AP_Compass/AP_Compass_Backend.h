@@ -34,21 +34,21 @@ public:
     virtual ~AP_Compass_Backend(void) {}
 
     // initialize the magnetometers
-    virtual bool init(void);
+    virtual bool init(void) = 0;
 
     // read sensor data
-    virtual bool read(void);
+    virtual bool read(void) = 0;
 
     // accumulate a reading from the magnetometer
-    virtual void accumulate(void);
+    virtual void accumulate(void) = 0;
 
     int16_t product_id;                         /// product id
 
 protected:
-    virtual bool        read_raw(void);
-    virtual bool        re_initialise(void);
-    virtual bool        read_register(uint8_t address, uint8_t *value);
-    virtual bool        write_register(uint8_t address, uint8_t value);
+    virtual bool        read_raw(void) = 0;
+    virtual bool        re_initialise(void) = 0;
+    virtual bool        read_register(uint8_t address, uint8_t *value) = 0;
+    virtual bool        write_register(uint8_t address, uint8_t value) = 0;
     
     Compass             &_compass; ///< access to frontend
 
