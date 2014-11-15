@@ -47,23 +47,15 @@ public:
 protected:
     virtual bool        read_raw(void) = 0;
     virtual bool        re_initialise(void) = 0;
-    virtual bool        read_register(uint8_t address, uint8_t *value) = 0;
-    virtual bool        write_register(uint8_t address, uint8_t value) = 0;
     
     Compass             &_compass; ///< access to frontend
 
     float               calibration[3];
     bool                _initialised;
-    uint8_t             _base_config;
-    uint32_t            _retry_time; // when unhealthy the millis() value to retry at
-    AP_HAL::Semaphore*  _i2c_sem;
 
     int16_t             _mag_x;
     int16_t             _mag_y;
     int16_t             _mag_z;
-    int16_t             _mag_x_accum;
-    int16_t             _mag_y_accum;
-    int16_t             _mag_z_accum;
     uint8_t             _accum_count;
     uint32_t            _last_accum_time;
 
