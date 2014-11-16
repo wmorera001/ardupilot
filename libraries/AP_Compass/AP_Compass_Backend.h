@@ -49,19 +49,6 @@ protected:
     virtual bool        re_initialise(void) = 0;
     
     Compass             &_compass; ///< access to frontend
-
-    float               calibration[3];
-    bool                _initialised;
-
-    int16_t             _mag_x;
-    int16_t             _mag_y;
-    int16_t             _mag_z;
-    uint8_t             _accum_count;
-    uint32_t            _last_accum_time;
-
-    bool                _healthy;
-    Vector3f            _field;     ///< magnetic field strength
-
 };
 
 #endif // __AP_COMPASS_BACKEND_H__

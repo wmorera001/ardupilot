@@ -348,7 +348,7 @@ bool AP_Compass_HMC5843::read()
         // have the right orientation!)
         return false;
     }
-    if (!_healthy) {
+    if (!_compass._healthy[_compass_instance]) {
         if (hal.scheduler->millis() < _retry_time) {
             return false;
         }
@@ -361,7 +361,7 @@ bool AP_Compass_HMC5843::read()
 
 	if (_accum_count == 0) {
 	   accumulate();
-	   if (!_healthy || _accum_count == 0) {
+	   if (!_compass._healthy[_compass_instance] || _accum_count == 0) {
 		  // try again in 1 second, and set I2c clock speed slower
 		  _retry_time = hal.scheduler->millis() + 1000;
 		  hal.i2c->setHighSpeed(false);
@@ -369,9 +369,9 @@ bool AP_Compass_HMC5843::read()
 	   }
 	}
 
-	_field.x = _mag_x_accum * calibration[0] / _accum_count;
-	_field.y = _mag_y_accum * calibration[1] / _accum_count;
-	_field.z = _mag_z_accum * calibration[2] / _accum_count;
+	_compass._field[_compass_instance].x = _mag_x_accum * calibration[0] / _accum_count;
+	_compass._field[_compass_instance].y = _mag_y_accum * calibration[1] / _accum_count;
+	_compass._field[_compass_instance].z = _mag_z_accum * calibration[2] / _accum_count;
 	_accum_count = 0;
 	_mag_x_accum = _mag_y_accum = _mag_z_accum = 0;
 
@@ -379,27 +379,23 @@ bool AP_Compass_HMC5843::read()
 
     // rotate to the desired orientation
     if (product_id == AP_COMPASS_TYPE_HMC5883L) {
-        _field.rotate(ROTATION_YAW_90);
+        _compass._field[_compass_instance].rotate(ROTATION_YAW_90);
     }
 
     // apply default board orientation for this compass type. This is
     // a noop on most boards
-    _field.rotate(MAG_BOARD_ORIENTATION);
+    _compass._field[_compass_instance].rotate(MAG_BOARD_ORIENTATION);
 
     // add user selectable orientation
-    _field.rotate((enum Rotation)_compass.get_orientation(_compass_instance).get());
+    _compass._field[_compass_instance].rotate((enum Rotation)_compass.get_orientation(_compass_instance).get());
 
     if (!_compass._external[_compass_instance]) {
         // and add in AHRS_ORIENTATION setting if not an external compass
-        _field.rotate(_compass.get_board_orientation());
+        _compass._field[_compass_instance].rotate(_compass.get_board_orientation());
     }
 
-    _compass.apply_corrections(_field, _compass_instance);
-    _healthy = true;
-
-    _compass._field[_compass_instance] = _field;
-    _compass._healthy[_compass_instance] = _healthy;
-
+    _compass.apply_corrections(_compass._field[_compass_instance], _compass_instance);
+    _compass._healthy[_compass_instance] = true;
 
     return true;
 }

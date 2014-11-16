@@ -73,14 +73,14 @@ void AP_Compass_HIL::_setup_earth_field(void)
 
 bool AP_Compass_HIL::read()
 {
-    _field = _hil_mag;
+    _compass._field[_compass_instance] = _hil_mag;
     
-    _compass.apply_corrections(_field,_compass_instance);
+    _compass.apply_corrections(_compass._field[_compass_instance],_compass_instance);
 
     // values set by setHIL function
     _compass.last_update = hal.scheduler->micros();      // record time of update
     
-    //_update_compass(_compass_instance, _field, _healthy)
+    //_update_compass(_compass_instance, _compass._field[_compass_instance], _compass._healthy[_compass_instance])
     return true;
 }
 

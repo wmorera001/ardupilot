@@ -14,15 +14,13 @@ public:
     void        setHIL(const Vector3f &mag);
     const Vector3f&   getHIL() const;
     // detect the sensor
-    AP_Compass_Backend *detect(Compass &compass);
+    static AP_Compass_Backend *detect(Compass &compass);
     bool init(void);
 
     bool read_raw(void) {return true;}
     bool re_initialise(void) {return true;}
     bool read_register(uint8_t address, uint8_t *value) {return true;}
     bool write_register(uint8_t address, uint8_t value) {return true;}
-
-
 
 private:
     Vector3f    _hil_mag;
