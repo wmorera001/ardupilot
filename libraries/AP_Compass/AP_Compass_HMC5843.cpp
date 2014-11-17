@@ -66,9 +66,18 @@ AP_Compass_HMC5843::AP_Compass_HMC5843(Compass &compass):
 // detect the sensor
 AP_Compass_Backend *AP_Compass_HMC5843::detect(Compass &compass)
 {
-    AP_Compass_HMC5843 *sensor = new AP_Compass_HMC5843(compass);
-    if (sensor == NULL) {
-        return NULL;
+    if(){
+        set_hil_mode(true);
+        AP_Compass_HIL *sensor = new AP_Compass_HIL(compass);
+        if (sensor == NULL) {
+            return NULL;
+        }        
+    } else {
+        set_hil_mode(false);
+        AP_Compass_HMC5843 *sensor = new AP_Compass_HMC5843(compass);
+        if (sensor == NULL) {
+            return NULL;
+        }
     }
     if (!sensor->init()) {
         delete sensor;

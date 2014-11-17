@@ -635,3 +635,9 @@ void Compass::_setup_earth_field(void)
     R.from_euler(0, ToRad(66), get_declination());
     _Bearth = R * _Bearth;
 }
+
+// Set sensor in HIL mode
+void set_hil_mode(bool mode)
+{
+    
+}

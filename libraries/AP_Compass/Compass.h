@@ -288,6 +288,9 @@ public:
     bool        _healthy[COMPASS_MAX_INSTANCES];
     Vector3f    _field[COMPASS_MAX_INSTANCES];     ///< magnetic field strength
 
+    // Activate HIL mode in sensors
+    void set_hil_mode(bool mode);
+
 protected:
     // backend objects
     AP_Compass_Backend *_backends[COMPASS_MAX_INSTANCES];
