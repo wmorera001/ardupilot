@@ -24,7 +24,7 @@
 #include "../AP_ADC/AP_ADC.h"
 #include <SITL_State.h>
 #include <fenv.h>
-
+#include <xmmintrin.h>
 
 using namespace AVR_SITL;
 
@@ -129,7 +129,8 @@ void SITL_State::_update_ins(float roll, 	float pitch, 	float yaw,		// Relative 
 	}
 
         if (_sitl->float_exception) {
-            feenableexcept(FE_INVALID | FE_OVERFLOW);
+            //feenableexcept(FE_INVALID | FE_OVERFLOW);
+            _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
         } else {
             feclearexcept(FE_INVALID | FE_OVERFLOW);
         }
