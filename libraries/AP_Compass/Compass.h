@@ -266,6 +266,14 @@ public:
     uint8_t get_primary(void) const { return 0; }
     void apply_corrections(Vector3f &mag, uint8_t i);
 
+    // HIL methods
+    void        setHIL(float roll, float pitch, float yaw);
+    void        setHIL(const Vector3f &mag);
+    const Vector3f&   getHIL() const;
+    void        _setup_earth_field();
+    Vector3f    _hil_mag;
+
+
     static const struct AP_Param::GroupInfo var_info[];
 
     // settable parameters
@@ -312,6 +320,11 @@ protected:
 
     // board orientation from AHRS
     enum Rotation _board_orientation;
+
+    // HIL variables
+    Vector3f    _Bearth;
+    float       _last_declination;
+
     
 };
 
