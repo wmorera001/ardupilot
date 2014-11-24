@@ -96,7 +96,9 @@ HAL_Linux::HAL_Linux() :
         &rcoutDriver,
         &schedulerInstance,
         &utilInstance)
-{}
+{
+    ros = LinuxROS();
+}
 
 void _usage(void)
 {
@@ -142,6 +144,7 @@ void HAL_Linux::init(int argc,char* const argv[]) const
     uartA->begin(57600);
     spi->init(NULL);
     utilInstance.init(argc, argv);
+    ros->init();
 }
 
 const HAL_Linux AP_HAL_Linux;
