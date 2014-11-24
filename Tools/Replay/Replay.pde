@@ -53,6 +53,7 @@
 #include <getopt.h>
 #include <errno.h>
 #include <fenv.h>
+#include <xmmintrin.h>
 
 #ifndef INT16_MIN
 #define INT16_MIN -32768
@@ -191,7 +192,8 @@ void setup()
     LogReader.wait_type(LOG_GPS_MSG);
     LogReader.wait_type(LOG_IMU_MSG);
 
-    feenableexcept(FE_INVALID | FE_OVERFLOW);
+    //feenableexcept(FE_INVALID | FE_OVERFLOW);
+    _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
     ahrs.set_compass(&compass);
     ahrs.set_fly_forward(true);

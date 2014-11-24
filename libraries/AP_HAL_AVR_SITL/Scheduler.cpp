@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fenv.h>
+#include <xmmintrin.h>
 
 #ifdef __CYGWIN__
 #include <stdio.h> 
@@ -210,7 +211,8 @@ void SITLScheduler::system_initialized() {
             PSTR("PANIC: scheduler system initialized called more than once"));
     }
     if (_sitlState->_sitl->float_exception) {
-        feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO);
+        //feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO);
+        _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
     } else {
         feclearexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO);
     }
