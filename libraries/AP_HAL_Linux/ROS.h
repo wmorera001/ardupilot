@@ -2,11 +2,19 @@
 #ifndef __AP_HAL_LINUX_ROS_H__
 #define __AP_HAL_LINUX_ROS_H__
 
-class Linux::LinuxROS
-{
+#include "ros/ros.h"
+
+class Linux::LinuxROS {
 public:
+	LinuxROS()
+	bool init();
+	void _ros_timer_tick();
 
 protected:
+	ros::NodeHandle n;
+	ros::Publisher chatter_pub;
+	ros::Rate loop_rate(10);
+	int count;
 
 };
 
