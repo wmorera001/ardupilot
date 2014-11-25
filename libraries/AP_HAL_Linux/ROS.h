@@ -2,11 +2,15 @@
 #ifndef __AP_HAL_LINUX_ROS_H__
 #define __AP_HAL_LINUX_ROS_H__
 
+#include <AP_HAL_Linux.h>
+
+#if CONFIG_HAL_BOARD == HAL_BOARD_LINUX
 #include "ros/ros.h"
+
 
 class Linux::LinuxROS {
 public:
-	LinuxROS()
+	LinuxROS();
 	bool init();
 	void _ros_timer_tick();
 
@@ -18,4 +22,5 @@ protected:
 
 };
 
+#endif // CONFIG_HAL_BOARD
 #endif // __AP_HAL_LINUX_ROS_H__
