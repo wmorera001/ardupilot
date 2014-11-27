@@ -41,6 +41,28 @@ extern const AP_HAL::HAL& hal;
 
 // Public Methods //////////////////////////////////////////////////////////////
 
+AP_Compass_PX4::AP_Compass_PX4(Compass &compass):
+    AP_Compass_Backend(compass),
+    product_id(AP_COMPASS_TYPE_PX4),
+    _num_instances(0)
+{
+}
+
+// detect the sensor
+AP_Compass_Backend *AP_Compass_PX4::detect(Compass &compass)
+{
+    AP_Compass_PX4 *sensor = new AP_Compass_PX4(compass);
+    if (sensor == NULL) {
+        return NULL;
+    }
+    if (!sensor->init()) {
+        delete sensor;
+        return NULL;
+    }
+    return sensor;
+}
+
+
 bool AP_Compass_PX4::init(void)
 {
 	_mag_fd[0] = open(MAG_DEVICE_PATH, O_RDONLY);
@@ -75,7 +97,7 @@ bool AP_Compass_PX4::init(void)
         }
         _count[0] = 0;
         _sum[i].zero();
-        _healthy[i] = false;
+        _compass._healthy[i] = false;
     }
 
     // give the driver a chance to run, and gather one sample
@@ -94,7 +116,7 @@ bool AP_Compass_PX4::read(void)
 
     // consider the compass healthy if we got a reading in the last 0.2s
     for (uint8_t i=0; i<_num_instances; i++) {
-        _healthy[i] = (hal.scheduler->micros64() - _last_timestamp[i] < 200000);
+        _compass._healthy[i] = (hal.scheduler->micros64() - _last_timestamp[i] < 200000);
     }
 
     for (uint8_t i=0; i<_num_instances; i++) {
@@ -116,8 +138,8 @@ bool AP_Compass_PX4::read(void)
             _sum[i].rotate(_board_orientation);
         }
         
-        _field[i] = _sum[i];
-        apply_corrections(_field[i],i);
+        _compass.field[i] = _sum[i];
+        apply_corrections(_compass.field[i],i);
     
         _sum[i].zero();
         _count[i] = 0;
@@ -125,7 +147,7 @@ bool AP_Compass_PX4::read(void)
 
     last_update = _last_timestamp[get_primary()];
     
-    return _healthy[get_primary()];
+    return _compass._healthy[get_primary()];
 }
 
 void AP_Compass_PX4::accumulate(void)
@@ -143,11 +165,11 @@ void AP_Compass_PX4::accumulate(void)
 
 uint8_t AP_Compass_PX4::get_primary(void) const
 {
-    if (_primary < _num_instances && _healthy[_primary] && use_for_yaw(_primary)) {
+    if (_primary < _num_instances && _compass._healthy[_primary] && use_for_yaw(_primary)) {
         return _primary;
     }
     for (uint8_t i=0; i<_num_instances; i++) {
-        if (_healthy[i] && (use_for_yaw(i))) return i;
+        if (_compass._healthy[i] && (use_for_yaw(i))) return i;
     }    
     return 0;
 }
