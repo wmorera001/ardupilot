@@ -79,6 +79,8 @@ static Empty::EmptyRCOutput rcoutDriver;
 static LinuxScheduler schedulerInstance;
 static LinuxUtil utilInstance;
 
+static LinuxROS rosInstance;
+
 HAL_Linux::HAL_Linux() :
     AP_HAL::HAL(
         &uartADriver,
@@ -97,7 +99,7 @@ HAL_Linux::HAL_Linux() :
         &schedulerInstance,
         &utilInstance)
 {
-    ros = LinuxROS();
+    ros = &rosInstance;
 }
 
 void _usage(void)

@@ -17,7 +17,6 @@ public:
 protected:
 	ros::NodeHandle n;
 	ros::Publisher chatter_pub;
-	ros::Rate loop_rate(10);
 	int count;
 
 };

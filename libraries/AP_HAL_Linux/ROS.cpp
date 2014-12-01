@@ -53,6 +53,8 @@ bool LinuxROS::init()
 
 void LinuxROS::_ros_timer_tick()
 {
+    ros::Rate loop_rate(10);
+    
     /**
      * This is a message object. You stuff it with data, and then publish it.
      */
