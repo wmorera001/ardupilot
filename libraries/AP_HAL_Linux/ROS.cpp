@@ -43,8 +43,10 @@ LinuxROS::LinuxROS()
 
 bool LinuxROS::init()
 {
+  int argc = 0;
+  char** argv;
    // Init a talker node
-   ros::init(NULL, NULL, "talker");
+   ros::init(argc, argv, "talker");
    // register to the "chatter" topic
    chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
    // number of messages sent
