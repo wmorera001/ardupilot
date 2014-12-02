@@ -44,6 +44,8 @@ static SITLUARTDriver sitlUart4Driver(4, &sitlState);
 
 static SITLUtil utilInstance;
 
+static SITLROS rosInstance;
+
 HAL_AVR_SITL::HAL_AVR_SITL() :
     AP_HAL::HAL(
 	    &sitlUart0Driver,  /* uartA */
@@ -61,7 +63,8 @@ HAL_AVR_SITL::HAL_AVR_SITL() :
         &sitlRCOutput, /* rcoutput */
         &sitlScheduler, /* scheduler */
         &utilInstance), /* util */
-    _sitl_state(&sitlState)
+    _sitl_state(&sitlState),
+    ros(&rosInstance)
 {}
 
 void HAL_AVR_SITL::init(int argc, char * const argv[]) const 
@@ -77,6 +80,7 @@ void HAL_AVR_SITL::init(int argc, char * const argv[]) const
     //i2c->begin();
     //i2c->setTimeout(100);
     analogin->init(NULL);
+    ros->init();
 }
 
 const HAL_AVR_SITL AP_HAL_AVR_SITL;

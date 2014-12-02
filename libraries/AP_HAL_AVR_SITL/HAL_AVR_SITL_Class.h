@@ -15,6 +15,8 @@ public:
     HAL_AVR_SITL();    
     void init(int argc, char * const argv[]) const;
 
+    AVR_SITL::SITLROS* ros;
+
 private:
     AVR_SITL::SITL_State *_sitl_state;
 };
