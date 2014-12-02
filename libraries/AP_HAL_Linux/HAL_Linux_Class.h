@@ -5,11 +5,14 @@
 #include <AP_HAL.h>
 
 #include "AP_HAL_Linux_Namespace.h"
+#include "ROS.h"
 
 class HAL_Linux : public AP_HAL::HAL {
 public:
     HAL_Linux();
     void init(int argc, char * const * argv) const;
+
+    Linux::LinuxROS* ros;
 };
 
 extern const HAL_Linux AP_HAL_Linux;

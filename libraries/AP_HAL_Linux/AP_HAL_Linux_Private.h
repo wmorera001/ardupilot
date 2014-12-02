@@ -21,6 +21,7 @@
 #include "Scheduler.h"
 #include "ToneAlarmDriver.h"
 #include "Util.h"
+#include "ROS.h"
 
 #endif // __AP_HAL_LINUX_PRIVATE_H__
 

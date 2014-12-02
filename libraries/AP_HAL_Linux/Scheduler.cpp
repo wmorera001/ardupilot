@@ -25,6 +25,7 @@ extern const AP_HAL::HAL& hal;
 #define APM_LINUX_MAIN_PRIORITY         12
 #define APM_LINUX_TONEALARM_PRIORITY    11
 #define APM_LINUX_IO_PRIORITY           10
+#define APM_LINUX_ROS_PRIORITY           9
 
 LinuxScheduler::LinuxScheduler()
 {}
@@ -94,6 +95,14 @@ void LinuxScheduler::init(void* machtnichts)
     pthread_attr_setschedpolicy(&thread_attr, SCHED_FIFO);
     
     pthread_create(&_io_thread_ctx, &thread_attr, (pthread_startroutine_t)&Linux::LinuxScheduler::_io_thread, this);
+
+    // the IO thread runs at lower priority
+    pthread_attr_init(&thread_attr);
+    param.sched_priority = APM_LINUX_ROS_PRIORITY;
+    (void)pthread_attr_setschedparam(&thread_attr, &param);
+    pthread_attr_setschedpolicy(&thread_attr, SCHED_FIFO);
+    
+    pthread_create(&_ros_thread_ctx, &thread_attr, (pthread_startroutine_t)&Linux::LinuxScheduler::_ros_thread, this);
 }
 
 void LinuxScheduler::_microsleep(uint32_t usec)
@@ -353,6 +362,22 @@ void *LinuxScheduler::_io_thread(void)
         _run_io();
     }
     return NULL;
+}
+
+void *LinuxScheduler::_ros_thread(void)
+{
+    _setup_realtime(32768);
+    while (system_initializing()) {
+        poll(NULL, 0, 1);        
+    }
+    while (true) {
+        _microsleep(20000);
+
+        // process any pending storage writes
+        ((LinuxROS *)hal.ros)->_ros_timer_tick();
+    }
+    return NULL;
+
 }
 
 void LinuxScheduler::panic(const prog_char_t *errormsg) 
