@@ -7,6 +7,7 @@
 #include "Storage.h"
 #include "UARTDriver.h"
 #include "SITL_State.h"
+#include "ROS.h"
 
 #endif // __AP_HAL_AVR_SITL_PRIVATE_H__
 

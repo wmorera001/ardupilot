@@ -9,11 +9,14 @@
 #include <AP_HAL_AVR_SITL.h>
 #include "AP_HAL_AVR_SITL_Namespace.h"
 #include "SITL_State.h"
+#include "ROS.h"
 
 class HAL_AVR_SITL : public AP_HAL::HAL {
 public:
     HAL_AVR_SITL();    
     void init(int argc, char * const argv[]) const;
+
+    AVR_SITL::SITLROS* ros;
 
 private:
     AVR_SITL::SITL_State *_sitl_state;
